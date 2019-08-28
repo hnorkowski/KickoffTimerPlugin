@@ -1,0 +1,6 @@
+Kickoff timer plugin
+0|Load|plugin load kickofftimerplugin
+7
+0|Unload|plugin unload kickofftimerplugin
+7
+0|Reset Personal Best|kickofftimer_reset
