@@ -5,26 +5,17 @@
 
 BAKKESMOD_PLUGIN(KickoffTimerPlugin, "Kickoff timer plugin", "0.1", PLUGINTYPE_FREEPLAY)
 
+static const string savefile = "bakkesmod/data/kickofftimerplugin.data";
 
 void KickoffTimerPlugin::onLoad()
 {
-	cvarManager->registerCvar("kickofftimer_personalBest_R", "-1", "Personal best data", false, false, 0.0, false, 0.0, true);
-	cvarManager->registerCvar("kickofftimer_personalBest_L", "-1", "Personal best data", false);
-	cvarManager->registerCvar("kickofftimer_personalBest_M", "-1", "Personal best data", false);
-	cvarManager->registerCvar("kickofftimer_personalBest_MR", "-1", "Personal best data", false);
-	cvarManager->registerCvar("kickofftimer_personalBest_ML", "-1", "Personal best data", false);
+	spawnLocations.push_back({ "ML", {256, -3840}, 2.30312 });
+	spawnLocations.push_back({ "MR", {-256, -3840}, 2.30312  });
+	spawnLocations.push_back({ "M", {0, -4608}, 2.62897 });
+	spawnLocations.push_back({ "L", {2048, -2560}, 2.06905 });
+	spawnLocations.push_back({ "R", {-2048, -2560},  2.06905 });
 
-	cvarManager->log(to_string(cvarManager->getCvar("kickofftimer_personalBest_R").getFloatValue()));
-	cvarManager->log(to_string(cvarManager->getCvar("kickofftimer_personalBest_L").getFloatValue()));
-	cvarManager->log(to_string(cvarManager->getCvar("kickofftimer_personalBest_M").getFloatValue()));
-	cvarManager->log(to_string(cvarManager->getCvar("kickofftimer_personalBest_MR").getFloatValue()));
-	cvarManager->log(to_string(cvarManager->getCvar("kickofftimer_personalBest_ML").getFloatValue()));
-
-	spawnLocations.push_back({ "ML", {256, -3840}, 2.30312, cvarManager->getCvar("kickofftimer_personalBest_ML").getFloatValue() });
-	spawnLocations.push_back({ "MR", {-256, -3840}, 2.30312, cvarManager->getCvar("kickofftimer_personalBest_MR").getFloatValue() });
-	spawnLocations.push_back({ "M", {0, -4608}, 2.62897, cvarManager->getCvar("kickofftimer_personalBest_M").getFloatValue() });
-	spawnLocations.push_back({ "L", {2048, -2560}, 2.06905, cvarManager->getCvar("kickofftimer_personalBest_L").getFloatValue() });
-	spawnLocations.push_back({ "R", {-2048, -2560},  2.06905, cvarManager->getCvar("kickofftimer_personalBest_R").getFloatValue() });
+	load();
 
 	cvarManager->registerNotifier("kickofftimer_reset", [this](std::vector<string> params) {
 		for (int i = 0; i < spawnLocations.size(); i++) {
@@ -47,24 +38,17 @@ void KickoffTimerPlugin::onLoad()
 
 void KickoffTimerPlugin::onUnload()
 {
-	gameWrapper->UnhookEvent("Function TAGame.FXActor_Car_TA.SetBraking");
-	gameWrapper->UnhookEvent("Function Engine.Controller.Restart");
-	gameWrapper->UnhookEvent("Function TAGame.Car_TA.EventHitBall");
-
-	cvarManager->getCvar("kickofftimer_personalBest_ML").setValue(spawnLocations.at(0).personalBest);
-	cvarManager->getCvar("kickofftimer_personalBest_MR").setValue(spawnLocations.at(1).personalBest);
-	cvarManager->getCvar("kickofftimer_personalBest_M").setValue(spawnLocations.at(2).personalBest);
-	cvarManager->getCvar("kickofftimer_personalBest_L").setValue(spawnLocations.at(3).personalBest);
-	cvarManager->getCvar("kickofftimer_personalBest_R").setValue(spawnLocations.at(4).personalBest);
-	cvarManager->log("Data saved!");
+	save();
 }
 
 void KickoffTimerPlugin::onHitBall(std::string eventName) 
 {
 	if (!gameWrapper->IsInGame() || hitted || spawn == 0)
 		return;
+
 	timeHit = gameWrapper->GetGameEventAsServer().GetSecondsElapsed() - timeStart;
 	hitted = true;
+
 	if (spawn->personalBest == -1) 
 	{
 		spawn->personalBest = timeHit;
@@ -90,7 +74,6 @@ void KickoffTimerPlugin::onHitBall(std::string eventName)
 	std::ostringstream os;
 	os << "Ball hitted after " << to_string_with_precision(timeHit, 2) << " seconds.";
 	std::string msg = os.str();
-	//gameWrapper->LogToChatbox(msg, "Kickoff Timer");
 	pBallHitted.text = msg;
 }
 
@@ -98,6 +81,7 @@ void KickoffTimerPlugin::onStartedDriving(std::string eventName)
 {
 	if (!gameWrapper->IsInGame())
 			return;
+
 	timeStart = gameWrapper->GetGameEventAsServer().GetSecondsElapsed();
 }
 
@@ -105,6 +89,7 @@ void KickoffTimerPlugin::onReset(std::string eventName)
 {
 	if (!gameWrapper->IsInGame())
 		return;
+
 	hitted = false;
 	pBallHitted.text = "";
 	
@@ -120,12 +105,6 @@ void KickoffTimerPlugin::onReset(std::string eventName)
 		if(spawn->personalBest > 0) os << "Personal Best: " << to_string_with_precision(spawn->personalBest, 2) << " seconds";
 		msg = os.str();
 		pBest.text = msg;
-
-		/*os.str("");
-		os.clear();
-		os << "Spawn Location: " << spawn->name << " - X:" << spawn->location.X << " Y:" << spawn->location.Y;
-		msg = os.str();
-		gameWrapper->LogToChatbox(msg, "Kickoff Timer");*/
 	}
 }
 
@@ -160,4 +139,49 @@ SpawnLocation* KickoffTimerPlugin::getSpawnLocation() {
 		}
 	}
 	return 0;
+}
+
+void KickoffTimerPlugin::save() {
+	ofstream myfile;
+	myfile.open(savefile);
+	if (myfile.is_open())
+	{
+		for (int i = 0; i < spawnLocations.size(); i++)
+		{
+			myfile << spawnLocations.at(i).personalBest << "\n";
+		}
+	}
+	else
+	{
+		cvarManager->log("Can't write savefile.");
+	}
+	myfile.close();
+}
+void KickoffTimerPlugin::load() {
+	ifstream myfile;
+	myfile.open(savefile);
+	if (myfile.good())
+	{
+		float f;
+		char buffer[8];
+
+		for (int i = 0; i < spawnLocations.size(); i++)
+		{
+			myfile.getline(buffer, 8);
+			if (!myfile.eof())
+			{
+				f = (float)atof(buffer);
+				spawnLocations.at(i).personalBest = f;
+			}
+			else
+			{
+				cvarManager->log("End of savefile reached too early!");
+				break;
+			}
+		}
+	}
+	else
+	{
+		cvarManager->log("Can't read savefile.");
+	}
 }
