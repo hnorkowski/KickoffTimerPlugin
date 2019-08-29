@@ -44,4 +44,6 @@ public:
 	virtual void onReset(std::string eventName);
 	virtual void Render(CanvasWrapper canvas);
 	virtual SpawnLocation* getSpawnLocation();
+	virtual void save();
+	virtual void load();
 };
