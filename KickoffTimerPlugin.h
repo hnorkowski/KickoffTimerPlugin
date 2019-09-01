@@ -26,24 +26,29 @@ struct SpawnLocation
 class KickoffTimerPlugin : public BakkesMod::Plugin::BakkesModPlugin
 {
 private:
-	float timeStart;
-	float timeHit;
+	float timeStart{};
+	float timeHit{};
 	bool hitted = false;
 	std::vector<Popup*> popups;
 	Popup pDefaultTime;
 	Popup pBallHitted;
 	Popup pBest;
 	std::vector<SpawnLocation> spawnLocations;
-	SpawnLocation* spawn;
+	SpawnLocation* spawn{};
 
 public:
 	virtual void onLoad();
 	virtual void onUnload();
+
 	virtual void onHitBall(std::string eventName);
 	virtual void onStartedDriving(std::string eventName);
 	virtual void onReset(std::string eventName);
 	virtual void Render(CanvasWrapper canvas);
 	virtual SpawnLocation* getSpawnLocation();
-	virtual void save();
-	virtual void load();
+	virtual void savePBFile();
+	virtual void loadPBFile();
+	virtual void SetHitTextWithTime(float time_hit);
+	virtual void SetHitTextWithTimeAndText(float time_hit, string& message);
+	virtual void ResetAndDeleteFile(bool deleteFile);
+	virtual void updateDecimalValue();
 };
