@@ -49,6 +49,6 @@ public:
 	virtual void loadPBFile();
 	virtual void SetHitTextWithTime(float time_hit);
 	virtual void SetHitTextWithTimeAndText(float time_hit, string& message);
-	virtual void ResetAndDeleteFile(bool deleteFile);
+	virtual void ResetPersonalBests();
 	virtual void updateDecimalValue();
 };

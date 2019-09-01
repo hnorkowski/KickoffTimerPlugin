@@ -2,12 +2,10 @@
 #include "bakkesmod/wrappers/includes.h"
 #include "utils/parser.h"
 #include <string>
-#include <stdio.h>
-#include <filesystem>
 
 BAKKESMOD_PLUGIN(KickoffTimerPlugin, "Kickoff timer plugin", "0.1", PLUGINTYPE_FREEPLAY)
 
-string savefile = "bakkesmod/data/kickofftimerplugin.data";
+static const string savefile = "bakkesmod/data/kickofftimerplugin.data";
 enum event_types { normal, better_than_normal, new_pb, slow_time };
 map<event_types, Color> color_mapping =
 {
@@ -23,19 +21,16 @@ void KickoffTimerPlugin::onLoad()
 {
 	spawnLocations.push_back({ "ML", {256, -3840}, 2.30312 });
 	spawnLocations.push_back({ "MR", {-256, -3840}, 2.30312  });
-	spawnLocations.push_back({ "M",  {0, -4608}, 2.62897 });
-	spawnLocations.push_back({ "L",  {2048, -2560}, 2.06905 });
-	spawnLocations.push_back({ "R",  {-2048, -2560},  2.06905 });
+	spawnLocations.push_back({ "M", {0, -4608}, 2.62897 });
+	spawnLocations.push_back({ "L", {2048, -2560}, 2.06905 });
+	spawnLocations.push_back({ "R", {-2048, -2560},  2.06905 });
 
 	loadPBFile();
 
 	cvarManager->registerNotifier("kickofftimer_reset", [this](std::vector<string> params) {
-		ResetAndDeleteFile(false);
+		ResetPersonalBests();
 	}, "Reset personal bests", PERMISSION_ALL);
 
-	cvarManager->registerNotifier("kickofftimer_resetAndDelete", [this](std::vector<string> params) {
-		ResetAndDeleteFile(true);
-	}, "Reset personal bests and Delete PB file", PERMISSION_ALL);
 
 	cvarManager->registerCvar("kickofftimer_decimalPlaces", "2", "How many decimal places to record time", true, true, 2, true, 4, true);
 	cvarManager->getCvar("kickofftimer_decimalPlaces").addOnValueChanged(std::bind(&KickoffTimerPlugin::updateDecimalValue, this));
@@ -54,17 +49,11 @@ void KickoffTimerPlugin::onLoad()
 	gameWrapper->RegisterDrawable(std::bind(&KickoffTimerPlugin::Render, this, std::placeholders::_1));
 }
 
-void KickoffTimerPlugin::ResetAndDeleteFile(const bool deleteFile)
+void KickoffTimerPlugin::ResetPersonalBests()
 {
 	for (auto& spawn_location : spawnLocations)
 	{
 		spawn_location.personalBest = -1;
-	}
-
-	if (deleteFile)
-	{
-		const auto path = experimental::filesystem::absolute(savefile);
-		remove(path);
 	}
 }
 
@@ -216,7 +205,8 @@ void KickoffTimerPlugin::Render(CanvasWrapper canvas)
 	}
 }
 
-SpawnLocation* KickoffTimerPlugin::getSpawnLocation() {
+SpawnLocation* KickoffTimerPlugin::getSpawnLocation()
+{
 	const auto location = gameWrapper->GetLocalCar().GetLocation();
 
 	for (auto& spawn_location : spawnLocations)
@@ -230,7 +220,8 @@ SpawnLocation* KickoffTimerPlugin::getSpawnLocation() {
 	return nullptr;
 }
 
-void KickoffTimerPlugin::savePBFile() {
+void KickoffTimerPlugin::savePBFile()
+{
 	ofstream myfile;
 	myfile.open(savefile);
 
@@ -248,7 +239,8 @@ void KickoffTimerPlugin::savePBFile() {
 
 	myfile.close();
 }
-void KickoffTimerPlugin::loadPBFile() {
+void KickoffTimerPlugin::loadPBFile()
+{
 	ifstream myfile;
 	myfile.open(savefile);
 	if (!myfile.good())
