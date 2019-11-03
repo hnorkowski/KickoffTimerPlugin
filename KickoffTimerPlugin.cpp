@@ -1,7 +1,4 @@
 #include "KickoffTimerPlugin.h"
-#include "bakkesmod\wrappers\includes.h"
-#include "utils/parser.h"
-#include <string>
 
 BAKKESMOD_PLUGIN(KickoffTimerPlugin, "Kickoff timer plugin", "0.1", PLUGINTYPE_FREEPLAY)
 
@@ -48,6 +45,8 @@ void KickoffTimerPlugin::onHitBall(std::string eventName)
 
 	timeHit = gameWrapper->GetGameEventAsServer().GetSecondsElapsed() - timeStart;
 	hitted = true;
+	if (timeHit < 1.5 || timeHit > 4) 
+		return;
 
 	if (spawn->personalBest == -1) 
 	{
@@ -71,10 +70,8 @@ void KickoffTimerPlugin::onHitBall(std::string eventName)
 		pBallHitted.color = { 0,255,0 };
 	}
 
-	std::ostringstream os;
-	os << "Ball hitted after " << to_string_with_precision(timeHit, 2) << " seconds.";
-	std::string msg = os.str();
-	pBallHitted.text = msg;
+	pBallHitted.text = string("Ball hitted after ") + to_string_with_precision(timeHit, 2) + string(" seconds.");
+	lastMsg = chrono::system_clock::now();
 }
 
 void KickoffTimerPlugin::onStartedDriving(std::string eventName)
@@ -95,22 +92,21 @@ void KickoffTimerPlugin::onReset(std::string eventName)
 	
 	spawn = getSpawnLocation();
 	if (spawn != 0) {
-		std::ostringstream os;
-		os << spawn->name << " normal Kickoff time: " << to_string_with_precision(spawn->normalTime, 2) << " seconds";
-		std::string msg = os.str();
-		pDefaultTime.text = msg;
+		pDefaultTime.text = spawn->name + string(" normal Kickoff time: ") + to_string_with_precision(spawn->normalTime, 2) + string(" seconds");
 
-		os.str("");
-		os.clear();
-		if(spawn->personalBest > 0) os << "Personal Best: " << to_string_with_precision(spawn->personalBest, 2) << " seconds";
-		msg = os.str();
-		pBest.text = msg;
+		if (spawn->personalBest > 0) {
+			pBest.text = string("Personal Best: ") + to_string_with_precision(spawn->personalBest, 2) + string(" seconds");
+		}
+		else {
+			pBest.text = "";
+		}
+		lastMsg = chrono::system_clock::now();
 	}
 }
 
 void KickoffTimerPlugin::Render(CanvasWrapper canvas)
 {
-	if (!gameWrapper->IsInGame() || popups.empty() || !spawn != 0)
+	if (!gameWrapper->IsInGame() || popups.empty() || !spawn != 0  || chrono::duration_cast<std::chrono::seconds> (chrono::system_clock::now() - lastMsg).count() > 4)
 		return;
 
 	auto screenSize = canvas.GetSize();
