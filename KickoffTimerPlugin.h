@@ -1,6 +1,12 @@
 #pragma once
 #pragma comment( lib, "bakkesmod.lib" )
 #include "bakkesmod/plugin/bakkesmodplugin.h"
+#include "bakkesmod\wrappers\includes.h"
+#include "utils/parser.h"
+#include <string>
+#include <chrono>
+
+//version 1.1
 
 struct Color
 {
@@ -12,8 +18,7 @@ struct Popup
 {
 	std::string text = "";
 	Color color = { 255, 255, 255 };
-	Vector2 startLocation = { -1, -1 };
-	
+	Vector2 startLocation = { -1, -1 };	
 };
 struct SpawnLocation
 {
@@ -26,6 +31,7 @@ struct SpawnLocation
 class KickoffTimerPlugin : public BakkesMod::Plugin::BakkesModPlugin
 {
 private:
+	chrono::system_clock::time_point lastMsg;
 	float timeStart;
 	float timeHit;
 	bool hitted = false;
