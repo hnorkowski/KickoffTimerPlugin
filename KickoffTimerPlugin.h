@@ -6,7 +6,7 @@
 #include <string>
 #include <chrono>
 
-//version 1.1
+//version 1.2
 
 struct Color
 {
@@ -35,6 +35,7 @@ private:
 	float timeStart;
 	float timeHit;
 	bool hitted = false;
+	bool started = false;
 	std::vector<Popup*> popups;
 	Popup pDefaultTime;
 	Popup pBallHitted;
@@ -52,4 +53,5 @@ public:
 	virtual SpawnLocation* getSpawnLocation();
 	virtual void save();
 	virtual void load();
+	void none();
 };
