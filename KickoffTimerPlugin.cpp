@@ -29,8 +29,9 @@ void KickoffTimerPlugin::onLoad()
 
 	gameWrapper->HookEventPost("Function TAGame.Car_TA.EventHitBall", std::bind(&KickoffTimerPlugin::onHitBall, this, std::placeholders::_1));
 	gameWrapper->HookEventPost("Function Engine.Controller.Restart", std::bind(&KickoffTimerPlugin::onReset, this, std::placeholders::_1));
-	gameWrapper->HookEventPost("Function GameEvent_Soccar_TA.Active.StartRound", std::bind(&KickoffTimerPlugin::onStartedDriving, this, std::placeholders::_1));
+	gameWrapper->HookEventPost("Function TAGame.Car_TA.SetVehicleInput", std::bind(&KickoffTimerPlugin::onStartedDriving, this, std::placeholders::_1));
 	gameWrapper->RegisterDrawable(std::bind(&KickoffTimerPlugin::Render, this, std::placeholders::_1));
+
 }
 
 void KickoffTimerPlugin::onUnload()
@@ -76,17 +77,24 @@ void KickoffTimerPlugin::onHitBall(std::string eventName)
 
 void KickoffTimerPlugin::onStartedDriving(std::string eventName)
 {
-	if (!gameWrapper->IsInGame())
+	if (!gameWrapper->IsInGame() || started)
 			return;
-
-	timeStart = gameWrapper->GetGameEventAsServer().GetSecondsElapsed();
+	CarWrapper car = gameWrapper->GetLocalCar();	
+	if (!car.IsNull()) {
+		ControllerInput controllerInput = car.GetInput();
+		if (controllerInput.Throttle > 0 || controllerInput.ActivateBoost > 0) {
+			started = true;
+			timeStart = gameWrapper->GetGameEventAsServer().GetSecondsElapsed();
+		}
+	}
+	
 }
 
 void KickoffTimerPlugin::onReset(std::string eventName)
 {
 	if (!gameWrapper->IsInGame())
 		return;
-
+	started = false;
 	hitted = false;
 	pBallHitted.text = "";
 	
@@ -180,4 +188,8 @@ void KickoffTimerPlugin::load() {
 	{
 		cvarManager->log("Can't read savefile.");
 	}
+}
+
+void KickoffTimerPlugin::none() {
+
 }
