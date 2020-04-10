@@ -83,12 +83,14 @@ void KickoffTimerPlugin::onHitBall(std::string eventName)
 
 void KickoffTimerPlugin::onSupersonicChanged()
 {
+	if (reachedSupersonic) return;
 	auto car = gameWrapper->GetLocalCar();
 	if (!car.IsNull())
 	{
 		if (car.GetbSuperSonic())
 		{
 			timeSupersonic = gameWrapper->GetGameEventAsServer().GetSecondsElapsed() - timeStart;
+			reachedSupersonic = true;
 			pSupersonic.text = "Reached supersonic after " + to_string_with_precision(timeSupersonic, 2) + string(" seconds.");
 		}
 		
@@ -119,6 +121,7 @@ void KickoffTimerPlugin::onReset(std::string eventName)
 	}
 	started = false;
 	hitted = false;
+	reachedSupersonic = false;
 	pBallHitted.text = "";
 	pSupersonic.text = "";
 

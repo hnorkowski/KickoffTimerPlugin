@@ -38,6 +38,7 @@ private:
 	float timeHit;
 	float timeSupersonic;
 	bool hitted = false;
+	bool reachedSupersonic = false;
 	bool started = false;
 	std::vector<Popup*> popups;
 	Popup pDefaultTime;
