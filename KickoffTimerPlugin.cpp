@@ -71,7 +71,7 @@ void KickoffTimerPlugin::onHitBall(std::string eventName)
 		pBallHitted.color = { 0,255,0 };
 	}
 
-	pBallHitted.text = string("Ball hitted after ") + to_string_with_precision(timeHit, 2) + string(" seconds.");
+	pBallHitted.text = string("Ball hit after ") + to_string_with_precision(timeHit, 2) + string(" seconds.");
 	lastMsg = chrono::system_clock::now();
 }
 
